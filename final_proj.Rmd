@@ -12,7 +12,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 
 library(readr)
+library(dplyr)
 Meteorite_Landings <- read_csv("Meteorite_Landings.csv")
+Meteorite_Landings |> filter(year>=860 & year<=2016) |> filter(reclong<=180 & reclong>=-180 & (reclat!=0 | reclong!=0))
+#filters out known invalid data values
+
 View(Meteorite_Landings)
 ```
 
