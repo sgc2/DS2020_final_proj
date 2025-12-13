@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 library(dplyr)
 library(ggplot2)
+library(maps)
 Meteorite_Landings <- read_csv("Meteorite_Landings.csv")
 #setup for the project with packages and dataset
 Meteorite <- Meteorite_Landings |> 
@@ -29,6 +30,8 @@ Meteorite |> summary()
 #View(Meteorite)
 ```
 
+**Analyze mass and reclass (material) and see if there is any correlation between the two**
+
 ```{r}
 
 mass <- Meteorite |> filter(`mass (g)` != 0, !is.na(`mass (g)`)) |> arrange(desc(`mass (g)`))
@@ -42,10 +45,15 @@ tail(mass, 5)
 
 mass |> ggplot(aes(x = log(`mass (g)`))) + 
   geom_histogram(binwidth=0.5) +
-  ggtitle("Distribution of the log of mass in g")
+  ggtitle("Distribution of the log of mass in g")+
+      theme_bw()
 
-
-
+mass |> ggplot(aes(x = `mass (g)`, fill = fall)) +
+      geom_histogram(binwidth = .3) +
+      scale_x_log10() +
+      scale_y_log10() + 
+      labs(x= 'Mass in g',y = 'Count') + ggtitle("Distribution of mass in g")+
+      theme_bw()
 ```
 
 ```{r}
@@ -59,27 +67,20 @@ material |> head(10) |> summarise(sum(`Percent Makeup`))
 #shows that the top 10 meteorite classes make up 79% of all meteorites.
 
 material |> head(10)
+topclass <- c("L6", "H5", "L5", "H6", "H4", "LL5", "LL6", "L4", "H4/5", "CM2")
+mass_filtered <- mass |> filter(class %in% topclass)
+#finds and filters only observations that are within the top 10 classes
 
 
-#|> summary()
-```
 
-```{r}
-
-
-Meteorite |> count(class) |> summary()
-
-#Meteorite |> 
- #filter(year>=860 & year<=2016) |> 
-  #filter(reclong<=180 & reclong>=-180 & (reclat!=0 | reclong!=0))
-#filters out known invalid data values
+mass_filtered |> ggplot(aes(x = class, y = log10(`mass (g)`))) +
+  geom_boxplot() +
+  theme_bw()
+  
+mass_filtered |> group_by(class) |> summarise(mean = mean(`mass (g)`), median = median(`mass (g)`), largest = max(`mass (g)`), smallest = min(`mass (g)`))
 
 
-```
-
-**Analyze mass and reclass (material) and see if there is any correlation between the two**
-
-```{r}
+#mass_filtered |> count(class) |> rename(count = n) |> arrange(desc(count)) |> mutate(`Percent Makeup` = (count/45566)*100)
 
 ```
 
@@ -87,6 +88,117 @@ Meteorite |> count(class) |> summary()
 
 ```{r}
 
+
+Meteorite |> 
+ filter(year>=860 & year<=2016) |> ggplot(aes(x = year)) + 
+  geom_histogram(binwidth=5) +
+  ggtitle("Distribution of meteorite landings over time") + 
+  coord_cartesian(xlim = c(1825, 2025))
+# All meteorite discoveries over time
+
+
+Meteorite |> 
+ filter(year>=860 & year<=2016, fall == "Fell") |> ggplot(aes(x = year)) + 
+  geom_histogram(binwidth=5) +
+  ggtitle("Distribution of observed meteorite landings over time") + 
+  coord_cartesian(xlim = c(1700, 2025)) 
+# distribution of meteorites which had their fall observed over time
+
+
+mass_filtered |> 
+ filter(year>=860 & year<=2016, fall == "Fell") |> ggplot(aes(x = year, fill = class)) + 
+  geom_histogram(binwidth=5) +
+  ggtitle("Distribution of meteorite landings over time") + 
+  coord_cartesian(xlim = c(1700, 2025))
+#distribution of meteor falls for meteors within the top 10 classes
+
+mass_filtered |> filter(year>=860 & year<=2016, fall == "Fell") |> group_by(year, class) |> count() |> rename(count = n) |> arrange(desc(count)) 
+
+
+# |> ggplot(aes(x = year, y = count, fill = class)) + geom_point() + 
+  #coord_cartesian(xlim = c(1700, 2025)) + 
+  #cale_fill_discrete(name = "Meteor Within Top 10 Classes")
+
+  
+#Meteorite |> 
+ #filter(year>=860 & year<=2016) |> ggplot(aes(x = year, y = `mass (g)`)) + 
+  #geom_point() +
+ # ggtitle("Distribution of the meteorite landings over time") + 
+  #coord_cartesian(xlim = c(1750, 2025), ylim =c(0, 40000000))
+
+#filters out known invalid data values
 ```
 
-**analyze and plot location of meteorite landings to see where has been most impacted**
+```{r}
+
+
+
+location_clean <- Meteorite |> filter(long<=180 & long>=-180 & (lat!=0 | long!=0))
+
+loc_top <- mass_filtered |> filter(long<=180 & long>=-180 & (lat!=0 | long!=0))
+
+
+world_map <- map_data("world")
+
+p <- ggplot() + coord_fixed() + xlab("") + ylab("")
+
+basicmap <- p + geom_polygon(data=world_map, aes(x=long, y=lat, group=group), 
+                               colour="Gray", fill="Dark green")
+
+clean <- theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = 'white', colour = 'white'), 
+        axis.line = element_line(colour = "white"), 
+        #legend.position="none",
+        axis.ticks=element_blank(), 
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank())
+world <- basicmap + clean
+
+World_landings <- world +
+  geom_point(data=location_clean,aes(x=long, y=lat), colour="Black")
+
+World_class <- world +
+  geom_point(data=loc_top,aes(x=long, y=lat, colour = class))
+
+World_landings
+World_class
+
+
+
+###
+top = 49.3457868
+left = -124.7844079 
+right = -66.9513812 
+bottom =  24.7433195 
+
+uscoords <- location_clean |> filter(lat >= bottom, lat <= top, long >= left, long <= right) 
+
+
+usadata <- map_data("usa")
+
+Usa_map <- p + geom_polygon(data=usadata, aes(x=long, y=lat, group=group), 
+                               colour="Gray", fill="Dark green")
+usa <- world + clean
+
+usa_landings <- usa +
+  geom_point(data=uscoords,aes(x=long, y=lat), colour="Black") + coord_cartesian(xlim = c(-125, -65), ylim = c(24, 50))
+
+usclass <- loc_top |> filter(lat >= bottom, lat <= top, long >= left, long <= right) 
+
+
+usa_class <- usa +
+  geom_point(data=usclass,aes(x=long, y=lat, colour = class))+ coord_cartesian(xlim = c(-125, -65), ylim = c(24, 50))
+
+
+usa_landings
+usa_class
+###
+
+
+
+
+
+```
+
+**anayze and plot location of meteorite landings to see where has been most impacted**
