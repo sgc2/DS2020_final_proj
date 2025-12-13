@@ -13,14 +13,67 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(readr)
 library(dplyr)
+library(ggplot2)
 Meteorite_Landings <- read_csv("Meteorite_Landings.csv")
-Meteorite_Landings |> filter(year>=860 & year<=2016) |> filter(reclong<=180 & reclong>=-180 & (reclat!=0 | reclong!=0))
-#filters out known invalid data values
+#setup for the project with packages and dataset
+Meteorite <- Meteorite_Landings |> 
+  rename(class = recclass,
+         long = reclong,
+         lat = reclat)
+#cleaning up the dataset with nicer names
 
-View(Meteorite_Landings)
+Meteorite |>  str()
+Meteorite |> summary()
+#Used to check the dataset
+
+#View(Meteorite)
 ```
 
 ```{r}
+
+mass <- Meteorite |> filter(`mass (g)` != 0, !is.na(`mass (g)`)) |> arrange(desc(`mass (g)`))
+#cleans data for mass analysis by removing observations with NA or 0 value
+
+mass |> summarise(`mass (g)`) |> summary()
+#Gives mean, median, and largest value of the mass
+tail(mass, 5)
+#Used to find the smallest value as it is so small the summary rounds it down to 0
+
+
+mass |> ggplot(aes(x = log(`mass (g)`))) + 
+  geom_histogram(binwidth=0.5) +
+  ggtitle("Distribution of the log of mass in g")
+
+
+
+```
+
+```{r}
+mass |> summarize(class)|> count()
+#gives 45566 total observations
+
+material <- mass |> count(class) |> rename(count = n) |> arrange(desc(count)) |> mutate(`Percent Makeup` = (count/45566)*100)
+#gives the class with the most values and its percent makeup of the data
+
+material |> head(10) |> summarise(sum(`Percent Makeup`))
+#shows that the top 10 meteorite classes make up 79% of all meteorites.
+
+material |> head(10)
+
+
+#|> summary()
+```
+
+```{r}
+
+
+Meteorite |> count(class) |> summary()
+
+#Meteorite |> 
+ #filter(year>=860 & year<=2016) |> 
+  #filter(reclong<=180 & reclong>=-180 & (reclat!=0 | reclong!=0))
+#filters out known invalid data values
+
 
 ```
 
