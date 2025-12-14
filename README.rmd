@@ -14,12 +14,102 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-```{r cars}
-summary(cars)
-```
+The goal of this project was to analyze data of meteor landings to better understand the characteristics of the samples we have found. Meteorites are valuable sources of information for us to understand the universe as they allow us to analyze samples of other celestial objects without having to leave earth to do so. Better understanding of what we do know may allow us to collect more samples and information to improve our understanding about the universe.
+
+Through this project, I attempted to analyze and explore these following questions:
 
 ## Data
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+The data I used comes from <https://www.kaggle.com/datasets/nasa/meteorite-landings>. It is a dataset of 45716 meteorites that was created by NASA by compiling information gathered from the Meteoritical Society's database of meteorites. Due to the fact that the data set was created and upkept by NASA, the data was in good condition that did not need much cleaning in order to start my analysis on it. The only issues I found with this data is that there were some missing or known erroneous data in certain columns as well as the fact the data only goes up to 2013 which is when NASA stopped up keeping it. This however, was easily remedied by filtering out the bad data when appropriate.
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(maps)
+Meteorite_Landings <- read_csv("Meteorite_Landings.csv")
+Meteorite <- Meteorite_Landings |> 
+  rename(class = recclass,
+         long = reclong,
+         lat = reclat)
+```
+
+My first action was to prepare the packages I was going to use as well as import the data set. Next, I renamed some of the variables in the data set to make them clearer in what they represented. I then analyzed the structure and the summary of the data to have a better understanding of what I was working with.
+
+### Variables
+
+-   **name**: the name of the meteorite
+
+-   **id**: a unique identifier for the meteorite within the database
+
+-   **nametype**: wether the metorite is typical (valid) or has been degraded by weather on Earth (relict)
+
+-   **class**: the class of the meteorite; Classification based on physical, chemical, and other characteristics
+
+-   **mass (g)**: the mass of the meteorite in grams
+
+-   **fall**: whether the meteorite was seen falling (Fell) or was discovered after its impact (found)
+
+-   **year**: the year the meteorite fell or found
+
+-   **lat**: the latitude of the meteorite's landing
+
+-   **long**: the longitude of the meteorite's landing
+
+-   **GeoLocation**: The coordinate pair combination of both lat and long.
+
+Of these variables, the most important to my analysis were class, mass (g), fall, year, lat, and long.
+
+## Results
+
+```{r}
+mass <- Meteorite |> filter(`mass (g)` != 0, !is.na(`mass (g)`)) |> arrange(desc(`mass (g)`))
+#cleans data for mass analysis by removing observations with NA or 0 value
+mass |> summarise(`mass (g)`) |> summary()
+#Gives mean, median, and largest value of the mass
+
+```
+
+```{r}
+tail(mass, 5)
+#Used to find the smallest value as it is so small the summary rounds it down to 0
+```
+
+```{r}
+mass |> ggplot(aes(x = `mass (g)`)) + 
+  geom_histogram(binwidth=0.5) +
+  scale_x_log10() +
+  scale_y_log10() +
+  ggtitle("Distribution of mass in g")+
+  labs(x= 'Mass in g',y = 'Count') + ggtitle("Distribution of mass in g") + theme_bw()
+#Distribution of mass of the meteorites, skews towards smaller
+```
+
+```{r}
+mass |> ggplot(aes(x = `mass (g)`, fill = fall)) +
+      geom_histogram(binwidth = .5) +
+      scale_x_log10() +
+      scale_y_log10() + 
+      labs(x= 'Mass in g',y = 'Count') + ggtitle("Distribution of mass in g")+
+      theme_bw()
+#comparison of the distribution of mass between meteorites found and those that have been observed falling. Found has larger range in mass but skews towards the left while fell follows a typical bell curve
+```
+
+```{r}
+mass |> summarize(class)|> count()
+#gives 45566 total observations
+
+material <- mass |> count(class) |> rename(count = n) |> arrange(desc(count)) |> mutate(`Percent Makeup` = (count/45566)*100)
+#gives the class with the most values and its percent makeup of the data
+
+material |> head(10) |> summarise(sum(`Percent Makeup`))
+#shows that the top 10 meteorite classes make up 79% of all meteorites.
+
+material |> head(10)
+topclass <- c("L6", "H5", "L5", "H6", "H4", "LL5", "LL6", "L4", "H4/5", "CM2")
+mass_filtered <- mass |> filter(class %in% topclass)
+```
+
+```{r}
+
 ```

@@ -43,17 +43,23 @@ tail(mass, 5)
 #Used to find the smallest value as it is so small the summary rounds it down to 0
 
 
-mass |> ggplot(aes(x = log(`mass (g)`))) + 
+mass |> ggplot(aes(x = `mass (g)`)) + 
   geom_histogram(binwidth=0.5) +
-  ggtitle("Distribution of the log of mass in g")+
+  scale_x_log10() +
+  scale_y_log10() +
+  ggtitle("Distribution of mass in g")+
+  labs(x= 'Mass in g',y = 'Count') + ggtitle("Distribution of mass in g")
       theme_bw()
+# Distribution of mass of the meteorites, skews towards smaller
+
 
 mass |> ggplot(aes(x = `mass (g)`, fill = fall)) +
-      geom_histogram(binwidth = .3) +
+      geom_histogram(binwidth = .5) +
       scale_x_log10() +
       scale_y_log10() + 
       labs(x= 'Mass in g',y = 'Count') + ggtitle("Distribution of mass in g")+
       theme_bw()
+#comparison of the distribution of mass between meteorites found and those that have been observed falling. Found has larger range in mass but skews towards the left while fell follows a typical bell curve
 ```
 
 ```{r}
@@ -76,7 +82,7 @@ mass_filtered <- mass |> filter(class %in% topclass)
 mass_filtered |> ggplot(aes(x = class, y = log10(`mass (g)`))) +
   geom_boxplot() +
   theme_bw()
-  
+  # gives boxplot for the range in mass for the top 10 classes. CM2 has the lowest mean mass, L4 has the highest, and H5 has the biggest range
 mass_filtered |> group_by(class) |> summarise(mean = mean(`mass (g)`), median = median(`mass (g)`), largest = max(`mass (g)`), smallest = min(`mass (g)`))
 
 
@@ -106,7 +112,7 @@ Meteorite |>
 
 mass_filtered |> 
  filter(year>=860 & year<=2016, fall == "Fell") |> ggplot(aes(x = year, fill = class)) + 
-  geom_histogram(binwidth=5) +
+  geom_histogram(binwidth=10) +
   ggtitle("Distribution of meteorite landings over time") + 
   coord_cartesian(xlim = c(1700, 2025))
 #distribution of meteor falls for meteors within the top 10 classes
@@ -120,9 +126,9 @@ mass_filtered |> filter(year>=860 & year<=2016, fall == "Fell") |> group_by(year
 
 
 location_clean <- Meteorite |> filter(long<=180 & long>=-180 & (lat!=0 | long!=0))
-
+#removes data with known bad location data
 loc_top <- mass_filtered |> filter(long<=180 & long>=-180 & (lat!=0 | long!=0))
-
+#removes data with known bad location data for those within the top 10 classes
 
 world_map <- map_data("world")
 
@@ -140,16 +146,20 @@ clean <- theme(panel.grid.major = element_blank(),
         axis.text.x=element_blank(),
         axis.text.y=element_blank())
 world <- basicmap + clean
-
+#makes a clean map of the world to plot data on
 World_landings <- world +
   geom_point(data=location_clean,aes(x=long, y=lat), colour="Black")
-
+# maps all meteorites on the world
 World_class <- world +
   geom_point(data=loc_top,aes(x=long, y=lat, colour = class))
+#maps all meteorites within top 10 classes 
+
+World_mass <- world +
+  geom_point(data=location_clean,aes(x=long, y=lat, colour = `mass (g)`, size = `mass (g)` ))
 
 World_landings
 World_class
-
+World_mass
 
 
 ###
@@ -160,21 +170,21 @@ bottom =  24.7433195
 
 uscoords <- location_clean |> filter(lat >= bottom, lat <= top, long >= left, long <= right) 
 
-
 usadata <- map_data("usa")
 
 Usa_map <- p + geom_polygon(data=usadata, aes(x=long, y=lat, group=group), 
                                colour="Gray", fill="Dark green")
 usa <- world + clean
-
+#cleans map of the united states
 usa_landings <- usa +
   geom_point(data=uscoords,aes(x=long, y=lat), colour="Black") + coord_cartesian(xlim = c(-125, -65), ylim = c(24, 50))
 
 usclass <- loc_top |> filter(lat >= bottom, lat <= top, long >= left, long <= right) 
 
-
 usa_class <- usa +
   geom_point(data=usclass,aes(x=long, y=lat, colour = class))+ coord_cartesian(xlim = c(-125, -65), ylim = c(24, 50))
+# maps all meteorites and all top 10 class meteorites in the us
+
 
 
 usa_landings
