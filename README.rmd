@@ -1,0 +1,25 @@
+---
+title: "README"
+output: html_document
+date: "2025-12-14"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Analysis on Meteor Landings
+
+#### **Sebastian Gonzalez Corea**
+
+## Introduction
+
+```{r cars}
+summary(cars)
+```
+
+## Data
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```

@@ -80,7 +80,6 @@ mass_filtered |> ggplot(aes(x = class, y = log10(`mass (g)`))) +
 mass_filtered |> group_by(class) |> summarise(mean = mean(`mass (g)`), median = median(`mass (g)`), largest = max(`mass (g)`), smallest = min(`mass (g)`))
 
 
-#mass_filtered |> count(class) |> rename(count = n) |> arrange(desc(count)) |> mutate(`Percent Makeup` = (count/45566)*100)
 
 ```
 
@@ -114,19 +113,6 @@ mass_filtered |>
 
 mass_filtered |> filter(year>=860 & year<=2016, fall == "Fell") |> group_by(year, class) |> count() |> rename(count = n) |> arrange(desc(count)) 
 
-
-# |> ggplot(aes(x = year, y = count, fill = class)) + geom_point() + 
-  #coord_cartesian(xlim = c(1700, 2025)) + 
-  #cale_fill_discrete(name = "Meteor Within Top 10 Classes")
-
-  
-#Meteorite |> 
- #filter(year>=860 & year<=2016) |> ggplot(aes(x = year, y = `mass (g)`)) + 
-  #geom_point() +
- # ggtitle("Distribution of the meteorite landings over time") + 
-  #coord_cartesian(xlim = c(1750, 2025), ylim =c(0, 40000000))
-
-#filters out known invalid data values
 ```
 
 ```{r}
