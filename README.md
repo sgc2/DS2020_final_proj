@@ -489,9 +489,8 @@ the path of the rocky mountains. The outline of the Mojave desert can
 also be seen in the area above the Mexican border. There is also a lack
 of meteorites found in the midwest, possibly due to the large amount of
 farming that is done which could displace or destroy landed meteorites
-as earth is moved. These two lines seem to follow the path of the
-Appalachian mountain range in the east. This further supports the
-conclusions that were made earlier with the world map
+as earth is moved. This further supports the conclusions that were made
+earlier with the world map
 
 ## Final Thoughts
 
