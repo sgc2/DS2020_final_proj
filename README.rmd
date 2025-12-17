@@ -141,7 +141,7 @@ mass_filtered |> ggplot(aes(x = class, y = log10(`mass (g)`))) +
   ggtitle("Comparison of mass among top 10 meteorite classes")
 ```
 
-## Year
+### Year
 
 ```{r}
 Meteorite |> 
@@ -167,7 +167,7 @@ mass_filtered |>
 
 Next, I viewed the distribution of meteorites within the top 10 classes that had been observed falling over time. I found it to be very interesting that different classes have occasional spikes in activity over the years . This could imply that all those meteorites of a specific class during that time frame may have possibly come from the same source.
 
-## Location
+### Location
 
 ```{r}
 location_clean <- Meteorite |> filter(long<=180 & long>=-180 & (lat!=0 | long!=0))
@@ -237,3 +237,9 @@ usa_fall
 ```
 
 Using a similar method as creating the world map and making sure all coordinate systems were the same, a map of landing locations in the US was created in order to see if the conclusions that had previously been drawn would hold for a smaller sample size. On this map, there are two main clusters of found meteorites while those that have fallen are more spread out. This may be due to the lower frequency of meteorites seen falling than found as despite the more spread out nature, fell meteorites typically are located nearby to a few other fell meteorites which can indicate the location of a city. Alternatively, the found meteorites have two clusters. One is located in the center of the country which is less populated than the two coasts while the other looks to be in the southwest by the Mexican border, implying good terrain for discovery and preservation for fallen meteorites. The lack of meteorites in areas also corresponds to formations that would present natural barriers to discovery. For example, the divide between the two clusters of found meteorites follows the path of the rocky mountains. The outline of the Mojave desert can also be seen in the area above the Mexican border. Similarly, fell meteorites follow two lines, one down the coast and one diagonal from the center of the country. These two lines seem to follow the path of the Appalachian mountain range in the east. This further supports the conclusions that were made earlier with the world map
+
+## Final Thoughts 
+
+From my analysis, I believe it is very likely that there are many more undiscovered meteorites around the world in locations that have not been thoroughly explored. These new samples could be a treasure trove of information, allowing us to learn more about what other bodies in space are composed of and gain a better understanding of how they, and Earth, may have come to be. They could also allow us to get a better understanding of events that may have happened in the past that may have launched them towards Earth in order to understand the history of our solar system even better.
+
+If possible, I would like to redo this project with a data set that has been updated past 2013 as that is when NASA stopped updating it. An updated set could possibly include information to help further strengthen the conclusions made as well as contain other factors about a meteorite's landing in order to make even deeper analysis.
