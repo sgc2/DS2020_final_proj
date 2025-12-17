@@ -102,14 +102,133 @@ mass |> summarize(class)|> count()
 material <- mass |> count(class) |> rename(count = n) |> arrange(desc(count)) |> mutate(`Percent Makeup` = (count/45566)*100)
 #gives the class with the most values and its percent makeup of the data
 
-material |> head(10) |> summarise(sum(`Percent Makeup`))
-#shows that the top 10 meteorite classes make up 79% of all meteorites.
-
 material |> head(10)
-topclass <- c("L6", "H5", "L5", "H6", "H4", "LL5", "LL6", "L4", "H4/5", "CM2")
-mass_filtered <- mass |> filter(class %in% topclass)
 ```
 
 ```{r}
+material |> head(10) |> summarise(sum(`Percent Makeup`))
+#shows that the top 10 meteorite classes make up 79% of all meteorites.
+```
 
+```{r}
+topclass <- c("L6", "H5", "L5", "H6", "H4", "LL5", "LL6", "L4", "H4/5", "CM2")
+mass_filtered <- mass |> filter(class %in% topclass)
+
+mass_filtered |> group_by(class) |> summarise(mean = mean(`mass (g)`), median = median(`mass (g)`), largest = max(`mass (g)`), smallest = min(`mass (g)`)) |> arrange(desc(mean))
+
+```
+
+```{r}
+mass_filtered |> ggplot(aes(x = class, y = log10(`mass (g)`))) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+```{r}
+Meteorite |> 
+ filter(year>=860 & year<=2016) |> ggplot(aes(x = year)) + 
+  geom_histogram(binwidth=5) +
+  ggtitle("Distribution of meteorite landings over time") + 
+  coord_cartesian(xlim = c(1875, 2025))+
+  theme_bw()
+# All meteorite discoveries over time
+
+```
+
+```{r}
+Meteorite |> 
+ filter(year>=860 & year<=2016, fall == "Fell") |> ggplot(aes(x = year)) + 
+  geom_histogram(binwidth=5) +
+  ggtitle("Distribution of observed meteorite landings over time") + 
+  coord_cartesian(xlim = c(1700, 2025)) +
+  theme_bw()
+# distribution of meteorites which had their fall observed over time
+```
+
+```{r}
+mass_filtered |> 
+ filter(year>=860 & year<=2016, fall == "Fell") |> ggplot(aes(x = year, fill = class)) + 
+  geom_histogram(binwidth=5) +
+  ggtitle("Distribution of meteorite landings over time") + 
+  coord_cartesian(xlim = c(1700, 2025)) +
+  theme_bw()
+#distribution of meteor falls for meteors within the top 10 classes
+```
+
+```{r}
+location_clean <- Meteorite |> filter(long<=180 & long>=-180 & (lat!=0 | long!=0))
+#removes data with known bad location data
+loc_top <- mass_filtered |> filter(long<=180 & long>=-180 & (lat!=0 | long!=0))
+#removes data with known bad location data for those within the top 10 classes
+
+world_map <- map_data("world")
+
+p <- ggplot() + coord_fixed() + xlab("") + ylab("")
+
+basicmap <- p + geom_polygon(data=world_map, aes(x=long, y=lat, group=group), 
+                               colour="Gray", fill="Dark green")
+
+clean <- theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = 'white', colour = 'white'), 
+        axis.line = element_line(colour = "white"), 
+        #legend.position="none",
+        axis.ticks=element_blank(), 
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank())
+world <- basicmap + clean
+#makes a clean map of the world to plot data on
+World_landings <- world +
+  geom_point(data=location_clean,aes(x=long, y=lat), colour="Black")
+# maps all meteorites on the world
+World_class <- world +
+  geom_point(data=loc_top,aes(x=long, y=lat, colour = class))
+#maps all meteorites within top 10 classes 
+
+World_mass <- world +
+  geom_point(data=location_clean,aes(x=long, y=lat, colour = `mass (g)`, size = `mass (g)` ))
+```
+
+```{r}
+World_landings
+```
+
+```{r}
+World_class
+```
+
+```{r}
+World_mass
+```
+
+```{r}
+top = 49.3457868
+left = -124.7844079 
+right = -66.9513812 
+bottom =  24.7433195 
+
+uscoords <- location_clean |> filter(lat >= bottom, lat <= top, long >= left, long <= right) 
+
+usadata <- map_data("usa")
+
+Usa_map <- p + geom_polygon(data=usadata, aes(x=long, y=lat, group=group), 
+                               colour="Gray", fill="Dark green")
+usa <- world + clean
+#cleans map of the united states
+usa_landings <- usa +
+  geom_point(data=uscoords,aes(x=long, y=lat), colour="Black") + coord_cartesian(xlim = c(-125, -65), ylim = c(24, 50))
+
+usclass <- loc_top |> filter(lat >= bottom, lat <= top, long >= left, long <= right) 
+
+usa_class <- usa +
+  geom_point(data=usclass,aes(x=long, y=lat, colour = class))+ coord_cartesian(xlim = c(-125, -65), ylim = c(24, 50))
+```
+
+```{r}
+usa_landings
+
+```
+
+```{r}
+usa_class
 ```
