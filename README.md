@@ -1,0 +1,512 @@
+README
+================
+2025-12-14
+
+# Analysis on Meteor Landings
+
+**Sebastian Gonzalez Corea**
+
+## Introduction
+
+The goal of this project was to analyze data of meteor landings to
+better understand the characteristics of the samples we have found.
+Meteorites are valuable sources of information for us to understand the
+universe as they allow us to analyze samples of other celestial objects
+without having to leave earth to do so. Better understanding of what we
+do know may allow us to collect more samples and information to improve
+our understanding about the universe.
+
+Through this project, I attempted to analyze and explore characteristics
+of meteorite landings:
+
+- Mass
+
+- Class
+
+- Year
+
+- Location
+
+## Data
+
+The data I used comes from
+<https://www.kaggle.com/datasets/nasa/meteorite-landings>. It is a data
+set of 45716 meteorites that was created by NASA by compiling
+information gathered from the Meteoritical Society’s database of
+meteorites. Due to the fact that the data set was created and up kept by
+NASA, the data was in good condition that did not need much cleaning in
+order to start my analysis on it. The only issues I found with this data
+is that there were some missing or known erroneous data in certain
+columns as well as the fact the data only goes up to 2013 which is when
+NASA stopped up keeping it. This however, was easily remedied by
+filtering out the bad data when appropriate.
+
+``` r
+library(readr)
+library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
+library(ggplot2)
+library(maps)
+```
+
+    ## Warning: package 'maps' was built under R version 4.5.2
+
+``` r
+Meteorite_Landings <- read_csv("Meteorite_Landings.csv")
+```
+
+    ## Rows: 45716 Columns: 10
+
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (5): name, nametype, recclass, fall, GeoLocation
+    ## dbl (5): id, mass (g), year, reclat, reclong
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+Meteorite <- Meteorite_Landings |> 
+  rename(class = recclass,
+         long = reclong,
+         lat = reclat)
+```
+
+My first action was to prepare the packages I was going to use as well
+as import the data set. Next, I renamed some of the variables in the
+data set to make them clearer in what they represented. I then analyzed
+the structure and the summary of the data to have a better understanding
+of what I was working with.
+
+### Variables
+
+- **name**: the name of the meteorite
+
+- **id**: a unique identifier for the meteorite within the database
+
+- **nametype**: whether the meteorite is typical (valid) or has been
+  degraded by weather on Earth (relict)
+
+- **class**: the class of the meteorite; Classification based on
+  physical, chemical, and other characteristics
+
+- **mass (g)**: the mass of the meteorite in grams
+
+- **fall**: whether the meteorite was seen falling (Fell) or was
+  discovered after its impact (found)
+
+- **year**: the year the meteorite fell or found
+
+- **lat**: the latitude of the meteorite’s landing
+
+- **long**: the longitude of the meteorite’s landing
+
+- **GeoLocation**: The coordinate pair combination of both lat and long.
+
+Of these variables, the most important to my analysis were class, mass
+(g), fall, year, lat, and long.
+
+## Results
+
+### Mass
+
+``` r
+mass <- Meteorite |> filter(`mass (g)` != 0, !is.na(`mass (g)`)) |> arrange(desc(`mass (g)`))
+
+mass |> summarise(`mass (g)`) |> summary()
+```
+
+    ## Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+    ## dplyr 1.1.0.
+    ## ℹ Please use `reframe()` instead.
+    ## ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+    ##   always returns an ungrouped data frame and adjust accordingly.
+    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+    ## generated.
+
+    ##     mass (g)       
+    ##  Min.   :       0  
+    ##  1st Qu.:       7  
+    ##  Median :      33  
+    ##  Mean   :   13284  
+    ##  3rd Qu.:     203  
+    ##  Max.   :60000000
+
+``` r
+mass|> select(`mass (g)`) |> tail(1)
+```
+
+    ## # A tibble: 1 × 1
+    ##   `mass (g)`
+    ##        <dbl>
+    ## 1       0.01
+
+The code above lets us see the mean, median, and range of the mass of
+the meteorites. However, the smallest mass is unable to properly output
+in the summary table so I needed to search manually for the smallest
+value. Interestingly, e can see that while the mean value for mass is
+13284 g, the median value was only 33 g. Such a large discrepancy could
+possibly be explained with the fact that the smallest mass was 0.1 g
+while the largest was 60000000 g. These two pieces of data when put
+together imply that while typically, meteorites tend to be on the
+smaller side, large meteorites, while rarer, are massive enough to skew
+the average mass higher.
+
+``` r
+mass |> ggplot(aes(x = `mass (g)`)) + 
+  geom_histogram(binwidth=0.5) +
+  scale_x_log10() +
+  scale_y_log10() +
+  ggtitle("Distribution of mass in g")+
+  labs(x= 'Mass in g',y = 'Count') + ggtitle("Distribution of mass in g") + theme_bw()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+In order to check if this assumption was true, I created a histogram to
+see the distribution of mass amongst the meteorites. It is important to
+note that a log scale was used on both axes in order to increase
+readability due to the large amount of meteorites present as well as the
+large range of the mass. This reinforces the notion that the meteorites
+do in fact skew towards a lower mass, with a majority being under 1 kg.
+There are also a lower amount of larger meteorites as predicted which
+helps reinforce the assumption of why there is such a difference between
+the mass and the median. The low mass may be caused due to the meteorite
+partially burning up when entering Earth’s atmosphere causing loss of
+material and making them smaller if they survive the ordeal.
+
+``` r
+mass |> ggplot(aes(x = `mass (g)`, fill = fall)) +
+        geom_histogram(binwidth = .5, position = "identity", alpha = 0.75) +
+      scale_x_log10() +
+      scale_y_log10() + 
+      labs(x= 'Mass in g',y = 'Count') + ggtitle("Distribution of Mass amongst different discovery types")+
+      theme_bw()
+```
+
+    ## Warning in scale_y_log10(): log-10 transformation introduced infinite values.
+
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+I next wanted to see how the distribution of mass differed between
+meteorites that were seen falling and those that were found after impact
+with the Earth. Using a slightly modified version of the code for the
+previous plot, I created an overlapping histogram for both fall types
+where those that had been seen falling is shown in the dark area of the
+light blue found histogram. Once again, it is important to note that the
+plot is in a log scale for visual purposes due to the large difference
+in population for both fall types. We can see that for those meteorites
+found after falling, it keeps the same shape and conclusions as the
+previous plot, owing to the fact that found meteorites make up the
+majority of meteorites discovered on Earth. On the other hand, those
+meteorites observed falling skew slightly towards having a higher mass,
+being slightly offset from a normal distribution centered on 1 kg. The
+differences in the mass distribution between the two categories implies
+that something can happen to meteorites after they have landed which can
+impact their mass. I believe the cause of this is due to weathering and
+erosion that happens due to exposure of the elements on earth. This
+would explain the larger on average mass of those seen falling, as they
+would not have time to be exposed to these conditions.
+
+### Class
+
+``` r
+material <- mass |> count(class) |> rename(count = n) |> arrange(desc(count)) |> mutate(`Percent Makeup` = (count/45566)*100)
+#gives the class with the most values and its percent makeup of the data
+
+material |> head(10)
+```
+
+    ## # A tibble: 10 × 3
+    ##    class count `Percent Makeup`
+    ##    <chr> <int>            <dbl>
+    ##  1 L6     8333           18.3  
+    ##  2 H5     7160           15.7  
+    ##  3 L5     4815           10.6  
+    ##  4 H6     4528            9.94 
+    ##  5 H4     4222            9.27 
+    ##  6 LL5    2766            6.07 
+    ##  7 LL6    2045            4.49 
+    ##  8 L4     1256            2.76 
+    ##  9 H4/5    428            0.939
+    ## 10 CM2     414            0.909
+
+``` r
+material |> head(10) |> summarise(sum(`Percent Makeup`))
+```
+
+    ## # A tibble: 1 × 1
+    ##   `sum(\`Percent Makeup\`)`
+    ##                       <dbl>
+    ## 1                      78.9
+
+My next topic of analysis was that of meteorite classification. Meteors
+are classified mainly by two categories: letters representing the makeup
+of the object as well as numbers that represent how much change a
+meteorite has gone through due to heat. Firstly, I wanted to see what
+the most common classifications were. In order to do so, I created a
+data frame that that counted the amount each class had in the data and
+then found their percentage with relation to the total observations.
+This showed that L6 meteorites, stony meteorites with low iron and high
+change from heat, were the most common class. For the top 10, there were
+two observations that that I found interesting. Firstly, the top 9
+classes were all chondrite, which is a group of similar classes of stony
+meteorites primarily differing in the amount of iron they contain. They
+also tended to have higher change due to heat. The second observation I
+made was that the top 10 classes made up roughly 79% of our meteorite
+data. These two pieces of information imply that the materials that make
+up the meteorites are fairly common throughout the universe as well as
+within celestial bodies. It also implies that there is a certain amount
+of heat that meteorites go through on average, possibly important in
+their formation of meteorites with specific makeup.
+
+``` r
+topclass <- c("L6", "H5", "L5", "H6", "H4", "LL5", "LL6", "L4", "H4/5", "CM2")
+mass_filtered <- mass |> filter(class %in% topclass)
+
+mass_filtered |> group_by(class) |> summarise(mean = mean(`mass (g)`), median = median(`mass (g)`), largest = max(`mass (g)`), smallest = min(`mass (g)`)) |> arrange(desc(median))
+```
+
+    ## # A tibble: 10 × 5
+    ##    class  mean median largest smallest
+    ##    <chr> <dbl>  <dbl>   <dbl>    <dbl>
+    ##  1 L4    1632.  69.6   257000     0.13
+    ##  2 L6    1441.  35.4   564000     0.03
+    ##  3 L5    1790.  31.8  1750000     0.08
+    ##  4 LL6    691.  30.8   271000     0.1 
+    ##  5 H5    2162.  24.7  4000000     0.01
+    ##  6 H6     862.  19.0   295000     0.05
+    ##  7 H4     995.  18.4   500000     0.18
+    ##  8 LL5    465.  16.2   408000     0.1 
+    ##  9 H4/5  1602.  10.7   256000     0.45
+    ## 10 CM2    368.   9.45  100000     0.14
+
+My next goal with class was to see if there was any correlation between
+the mass of a meteorite and its classification. I created a table with
+the mean, median, and range for each classification as well as created a
+boxplot seen below to better visualize as seen below. It seems like
+there is a slight correlation as L4 meteorites have a clear largest
+median, however other meteorites such as L6, L5, LL5, and H5 have very
+similar medians.
+
+``` r
+mass_filtered |> ggplot(aes(x = class, y = log10(`mass (g)`))) +
+  geom_boxplot() +
+  theme_bw()+
+  ggtitle("Comparison of mass among top 10 meteorite classes")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+### Year
+
+``` r
+Meteorite |> 
+ filter(year>=860 & year<=2016) |> ggplot(aes(x = year, fill = fall)) + 
+  geom_histogram(binwidth=5, position = "identity", alpha = 0.75) +
+  ggtitle("Distribution of meteorite discovery over time") + 
+  coord_cartesian(xlim = c(1750, 2025))+
+  theme_bw()+
+      scale_y_log10()
+```
+
+    ## Warning in scale_y_log10(): log-10 transformation introduced infinite values.
+
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+Next, I wanted to view how observations of meteors had changed over
+time. I made sure to remove known erroneous data from the year variable
+which I then used to make a histogram. This histogram has an overlapping
+area for both fall types where those that had been seen falling is shown
+in the dark area of the light blue found histogram. Once again, it is
+important to note that the plot is in a log scale for visual purposes
+due to the large difference in population for both fall types. It seems
+that both types of meteorite discoveries have increased over time,
+though those seen falling is a much more gradual increase than those
+found which is much steeper. It is interesting to note that before 1800,
+meteorite sightings were much lower. This could imply either a lack of
+meteorite activity or what I believe more likely, an increase in being
+able to identify and then find a meteorite that has fallen to earth.
+Similarly, there was a increase in meteorite discoveries starting in the
+early 1800’s which grew gradually until the late 1900’s where there was
+another sharp increase, this time much higher. I believe that these
+increases are connected to breakthroughs in identification techniques
+and scientific understandings about meteorites, specifically makeup and
+where they may be most easily discovered.
+
+``` r
+mass_filtered |> 
+ filter(year>=860 & year<=2016, fall == "Fell") |> ggplot(aes(x = year, fill = class)) + 
+  geom_histogram(binwidth=5) +
+  ggtitle("Distribution of meteorite landings over time") + 
+  coord_cartesian(xlim = c(1700, 2025)) +
+  theme_bw()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+Next, I viewed the distribution of meteorites within the top 10 classes
+that had been observed falling over time. I found it to be very
+interesting that different classes have occasional spikes in activity
+over the years . This could imply that all those meteorites of a
+specific class during that time frame may have possibly come from the
+same source.
+
+### Location
+
+``` r
+location_clean <- Meteorite |> filter(long<=180 & long>=-180 & (lat!=0 | long!=0))
+
+loc_top <- mass_filtered |> filter(long<=180 & long>=-180 & (lat!=0 | long!=0))
+
+
+world_map <- map_data("world")
+
+p <- ggplot() + coord_fixed() + xlab("") + ylab("")
+
+basicmap <- p + geom_polygon(data=world_map, aes(x=long, y=lat, group=group), 
+                               colour="Gray", fill="Dark green")
+
+clean <- theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = 'white', colour = 'white'), 
+        axis.line = element_line(colour = "white"), 
+        #legend.position="none",
+        axis.ticks=element_blank(), 
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank())
+world <- basicmap + clean
+
+World_landings <- world +
+  geom_point(data=location_clean,aes(x=long, y=lat), colour="Black")
+
+World_fall <- world +
+  geom_point(data=loc_top,aes(x=long, y=lat, colour = fall),alpha = 0.5)
+```
+
+Finally, my last goal was to check the geographic distribution of
+meteorites. In order to do so, I first cleaned the data of location data
+that was known to be wrong. Next, I created and cleaned a plot that
+looked like the world map. I then plotted the location data onto the map
+to better visualize it which is seen below.
+
+``` r
+World_landings
+```
+
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+It is very interesting to see that there are areas that seem to be like
+“hotspots” for meteorites. There are however, areas on the map with very
+little or no records of meteorites. I believe however, the actual
+distribution is a generally equal distribution of meteorites throughout
+the world and the one seen here is due to sampling bias. The reason I
+believe this is that the areas that are empty are those such as the
+amazon rain forest, the Sahara desert, and Siberia. All three of these
+areas as well as the other empty areas on the map are considered very
+harsh areas for human habitation. This would lead to them being harder
+to find samples in as there are less people in the area as well as are
+harder to reach. The opposite can also be seen with where meteorites
+have been found as they seem to be clustered around human population
+centers which are typically more accessible as well as a higher
+population that could theoretically find the meteorite.
+
+``` r
+World_fall
+```
+
+![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+Next, I wanted to analyze if there was any difference in the locations
+for meteorites of different fall types. It showed off an interesting
+result, showcasing that meteors of the same fall type tend to be
+clustered together mostly separate from the other type. The locations of
+the clusters make sense if they are considered with the same context as
+to why there are empty areas. Meteors which tend to be seen falling look
+to be located near more populated areas where more people would be able
+to see and identify the event. On the other hand, those that are found
+after their fall are found in areas that are a bit further away from
+population centers yet still would have a decent population of people as
+well as have terrain that is relatively feasible to search.
+
+``` r
+top = 49.3457868
+left = -124.7844079 
+right = -66.9513812 
+bottom =  24.7433195 
+
+uscoords <- location_clean |> filter(lat >= bottom, lat <= top, long >= left, long <= right) 
+
+usadata <- map_data("usa")
+
+Usa_map <- p + geom_polygon(data=usadata, aes(x=long, y=lat, group=group), 
+                               colour="Gray", fill="Dark green")
+usa <- world + clean
+
+usa_landings <- usa +
+  geom_point(data=uscoords,aes(x=long, y=lat, colour=fall),alpha = 0.75) + coord_cartesian(xlim = c(-125, -65), ylim = c(24, 50))
+```
+
+    ## Coordinate system already present.
+    ## ℹ Adding new coordinate system, which will replace the existing one.
+
+``` r
+usa_landings
+```
+
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
+Using a similar method as creating the world map and making sure all
+coordinate systems were the same, a map of landing locations in the US
+was created in order to see if the conclusions that had previously been
+drawn would hold for a smaller sample size. On this map, there are three
+main clusters of found meteorites while those that have fallen are more
+spread out. This may be due to the lower frequency of meteorites seen
+falling than found as despite the more spread out nature, fell
+meteorites typically are located nearby to a few other fell meteorites
+which can indicate the location of a city. Alternatively, the found
+meteorites have three clusters. One is located in the center of the
+country which is less populated than the two coasts, one is in the south
+east, and the last looks to be in the southwest by the Mexican border,
+implying good terrain for discovery and preservation for fallen
+meteorites. The lack of meteorites in areas also corresponds to
+formations that would present natural barriers to discovery. For
+example, the divide between the two clusters of found meteorites follows
+the path of the rocky mountains. The outline of the Mojave desert can
+also be seen in the area above the Mexican border. There is also a lack
+of meteorites found in the midwest, possibly due to the large amount of
+farming that is done which could displace or destroy landed meteorites
+as earth is moved. These two lines seem to follow the path of the
+Appalachian mountain range in the east. This further supports the
+conclusions that were made earlier with the world map
+
+## Final Thoughts
+
+From my analysis, I believe it is very likely that there are many more
+undiscovered meteorites around the world in locations that have not been
+thoroughly explored. These new samples could be a treasure trove of
+information, allowing us to learn more about what other bodies in space
+are composed of and gain a better understanding of how they, and Earth,
+may have come to be. They could also allow us to get a better
+understanding of events that may have happened in the past that may have
+launched them towards Earth in order to understand the history of our
+solar system even better.
+
+If possible, I would like to redo this project with a data set that has
+been updated past 2013 as that is when NASA stopped updating it. An
+updated set could possibly include information to help further
+strengthen the conclusions made as well as contain other factors about a
+meteorite’s landing in order to make even deeper analysis.

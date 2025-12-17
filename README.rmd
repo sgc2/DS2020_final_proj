@@ -1,6 +1,6 @@
 ---
 title: "README"
-output: html_document
+output: github_document
 date: "2025-12-14"
 ---
 
@@ -227,16 +227,16 @@ Usa_map <- p + geom_polygon(data=usadata, aes(x=long, y=lat, group=group),
                                colour="Gray", fill="Dark green")
 usa <- world + clean
 
+usa_landings <- usa +
+  geom_point(data=uscoords,aes(x=long, y=lat, colour=fall),alpha = 0.75) + coord_cartesian(xlim = c(-125, -65), ylim = c(24, 50))
 
-usa_fall <- usa +
-  geom_point(data=usclass,aes(x=long, y=lat, colour = fall))+ coord_cartesian(xlim = c(-125, -65), ylim = c(24, 50))
 ```
 
 ```{r}
-usa_fall
+usa_landings
 ```
 
-Using a similar method as creating the world map and making sure all coordinate systems were the same, a map of landing locations in the US was created in order to see if the conclusions that had previously been drawn would hold for a smaller sample size. On this map, there are two main clusters of found meteorites while those that have fallen are more spread out. This may be due to the lower frequency of meteorites seen falling than found as despite the more spread out nature, fell meteorites typically are located nearby to a few other fell meteorites which can indicate the location of a city. Alternatively, the found meteorites have two clusters. One is located in the center of the country which is less populated than the two coasts while the other looks to be in the southwest by the Mexican border, implying good terrain for discovery and preservation for fallen meteorites. The lack of meteorites in areas also corresponds to formations that would present natural barriers to discovery. For example, the divide between the two clusters of found meteorites follows the path of the rocky mountains. The outline of the Mojave desert can also be seen in the area above the Mexican border. Similarly, fell meteorites follow two lines, one down the coast and one diagonal from the center of the country. These two lines seem to follow the path of the Appalachian mountain range in the east. This further supports the conclusions that were made earlier with the world map
+Using a similar method as creating the world map and making sure all coordinate systems were the same, a map of landing locations in the US was created in order to see if the conclusions that had previously been drawn would hold for a smaller sample size. On this map, there are three main clusters of found meteorites while those that have fallen are more spread out. This may be due to the lower frequency of meteorites seen falling than found as despite the more spread out nature, fell meteorites typically are located nearby to a few other fell meteorites which can indicate the location of a city. Alternatively, the found meteorites have three clusters. One is located in the center of the country which is less populated than the two coasts, one is in the south east, and the last looks to be in the southwest by the Mexican border, implying good terrain for discovery and preservation for fallen meteorites. The lack of meteorites in areas also corresponds to formations that would present natural barriers to discovery. For example, the divide between the two clusters of found meteorites follows the path of the rocky mountains. The outline of the Mojave desert can also be seen in the area above the Mexican border. There is also a lack of meteorites found in the midwest, possibly due to the large amount of farming that is done which could displace or destroy landed meteorites as earth is moved. These two lines seem to follow the path of the Appalachian mountain range in the east. This further supports the conclusions that were made earlier with the world map
 
 ## Final Thoughts 
 
